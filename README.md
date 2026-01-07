@@ -18,6 +18,8 @@ teamcode/opmodes/auto/: File chạy tự động (RoadRunner/Autonomous).
 
 teamcode/utils/: Các công cụ hỗ trợ (Vision/Math).
 
+teamcode/mấy file khác/ : là mấy file anh tiếc chưa định xóa
+
 🛠 2. Quy tắc Lập trình (Coding Rules)
 Tuyệt đối không sử dụng hardwareMap.get() trong file OpMode cá nhân. Tất cả phải gọi thông qua đối tượng robot từ file RobotHardware.
 
