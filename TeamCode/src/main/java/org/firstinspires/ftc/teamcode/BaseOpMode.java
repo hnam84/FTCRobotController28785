@@ -1,47 +1,43 @@
 package org.firstinspires.ftc.teamcode;
 
-import static org.firstinspires.ftc.robotcore.external.BlocksOpModeCompanion.hardwareMap;
-import static org.firstinspires.ftc.robotcore.external.BlocksOpModeCompanion.telemetry;
+import com.qualcomm.robotcore.eventloop.opmode.LinearOpMode;
 
-public class BaseOpMode {
+// 1. Phải extends LinearOpMode và nên để là abstract
+public abstract class BaseOpMode extends LinearOpMode {
 
-    // Instance của HardwareRobot để subclass sử dụng
+    // Instance của HardwareRobot
     protected HardwareRobot robot = new HardwareRobot();
 
-    // Hàm khởi tạo robot (gọi trong subclass để setup hardware)
+    // Hàm khởi tạo robot
     protected void initRobot() {
+        // Sử dụng hardwareMap có sẵn từ LinearOpMode
         robot.init(hardwareMap);
         telemetry.addData("Status", "Robot Initialized");
         telemetry.update();
     }
 
-    // Hàm tiện ích: Chờ start với telemetry (hiển thị "Waiting for start...")
+    // Hàm tiện ích: Chờ start
     protected void waitForStartWithTelemetry() {
         telemetry.addData("Status", "Waiting for start...");
         telemetry.update();
+
+        // Gọi hàm waitForStart() của lớp cha (LinearOpMode)
         waitForStart();
+
         telemetry.addData("Status", "Started!");
         telemetry.update();
     }
 
-    public void waitForStart() {
-    }
-
-    // Hàm dừng robot (gọi trong subclass nếu cần, hoặc tự động trong stop)
+    // Hàm dừng robot
     protected void stopRobot() {
         robot.stop();
         telemetry.addData("Status", "Robot Stopped");
         telemetry.update();
     }
 
-    // Override runOpMode để đảm bảo stopRobot được gọi khi kết thúc
+    // 2. Bây giờ @Override sẽ hết đỏ vì LinearOpMode có hàm này
     @Override
     public void runOpMode() throws InterruptedException {
-        // Subclass sẽ override và gọi initRobot() ở đây
-        // Logic chính của subclass
-        // sau tự fill
-
-        // Đảm bảo dừng robot khi OpMode kết thúc
-        stopRobot();
+        // Hàm này sẽ được các lớp con (như Autonomous hoặc TeleOp) viết chi tiết
     }
 }

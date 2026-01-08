@@ -10,7 +10,7 @@ import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import org.firstinspires.ftc.teamcode.BaseOpMode;
 import org.firstinspires.ftc.teamcode.Constants;
 
-@TeleOp(name = "TankTeleOp", group = "Linear OpMode")git
+@TeleOp(name = "TankTeleOp", group = "Linear OpMode")
 public class TankTeleop extends BaseOpMode {
 
     @Override
@@ -53,7 +53,5 @@ public class TankTeleop extends BaseOpMode {
         // stopRobot() sẽ được gọi tự động từ BaseOpMode khi kết thúc
     }
 
-    private boolean opModeIsActive() {
-        return false;
-    }
+
 }
