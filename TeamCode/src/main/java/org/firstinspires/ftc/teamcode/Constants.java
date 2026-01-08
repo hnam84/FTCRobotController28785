@@ -1,6 +1,6 @@
 package org.firstinspires.ftc.teamcode;
 
-public class  {
+public class Constants {
     // Tốc độ tối đa của robot
     public static final double MAX_DRIVE_SPEED = 1.0;
 
@@ -24,6 +24,7 @@ public class  {
     // Thông số PID cho shooter ( dùng encoder để kiểm soát tốc độ bắn)
     public static final double SHOOTER_KP = 0.05;
     public static final double SHOOTER_KI = 0.0;
+
     public static final double SHOOTER_KD = 0.0;
 
     // Ngưỡng deadzone cho joystick
