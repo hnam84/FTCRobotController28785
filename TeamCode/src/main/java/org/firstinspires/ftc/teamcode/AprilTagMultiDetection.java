@@ -1,100 +1,127 @@
 package org.firstinspires.ftc.teamcode;
 
-
 import android.util.Size;
+
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
+
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.firstinspires.ftc.vision.VisionPortal;
 import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
 import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
+import org.firstinspires.ftc.teamcode.vision.BallVisionProcessor;
 
-    @Autonomous(name = "AprilTagMultiDetection", group = "Linear OpMode")
-    public class AprilTagMultiDetection extends BaseOpMode {
+@Autonomous(name = "AprilTagMultiDetection", group = "Linear OpMode")
+public class AprilTagMultiDetection extends BaseOpMode {
 
-        // Processor và Portal cho AprilTag
-        private AprilTagProcessor aprilTagProcessor;
-        private VisionPortal visionPortal;
+    // ===== Vision =====
+    private VisionPortal visionPortal;
+    private AprilTagProcessor aprilTagProcessor;
+    private BallVisionProcessor ballProcessor;
 
-        // Danh sách ID tag cần detect (5 tag: 20, 21, 22, 23, 24)
-        private static final int[] TARGET_TAG_IDS = {20, 21, 22, 23, 24};
+    // AprilTag IDs quan tâm
+    private static final int[] TARGET_TAG_IDS = {20, 21, 22, 23, 24};
 
-        @Override
-        public void runOpMode() throws InterruptedException {
-            // Khởi tạo robot
-            initRobot();
+    @Override
+    public void runOpMode() throws InterruptedException {
 
-            // Khởi tạo camera Logitech C720
-            aprilTagProcessor = new AprilTagProcessor.Builder()
-                    .setDrawTagOutline(true)  // Vẽ outline để debug
-                    .build();
+        // ===== INIT ROBOT =====
+        initRobot();
+           
+        // ===== INIT PROCESSORS (CHỈ 1 LẦN) =====
+        aprilTagProcessor = new AprilTagProcessor.Builder()
+                .setDrawTagOutline(true)
+                .build();
 
-            visionPortal = new VisionPortal.Builder()
-                    .setCamera(hardwareMap.get(WebcamName.class, "Webcam 1"))  // Logitech C720
-                    .setCameraResolution(new Size(640, 480))
-                    .addProcessor(aprilTagProcessor)
-                    .build();
+        ballProcessor = new BallVisionProcessor();
 
-            // Chờ start
-            waitForStartWithTelemetry();
+        // ===== INIT CAMERA + VISION PORTAL =====
+        visionPortal = new VisionPortal.Builder()
+                .setCamera(hardwareMap.get(WebcamName.class, "Webcam 1"))
+                .setCameraResolution(new Size(640, 480))
+                .addProcessor(aprilTagProcessor) // AprilTag
+                .addProcessor(ballProcessor)     // Ball + Color
+                .build();
 
-            // Vòng lặp chính: Nhận diện và đưa ra ID của từng tag
-            while (opModeIsActive()) {
-                // Lấy danh sách detections
-                java.util.List<AprilTagDetection> detections = aprilTagProcessor.getDetections();
+        // ===== WAIT START =====
+        waitForStartWithTelemetry();
 
-                // Xử lý detections và đưa ra ID
-                if (!detections.isEmpty()) {
-                    for (AprilTagDetection detection : detections) {
-                        int tagID = detection.id;
+        // ===== MAIN LOOP =====
+        while (opModeIsActive()) {
 
-                        // Kiểm tra nếu ID trong danh sách target (20, 21, 22, 23, 24)
-                        if (isTargetTag(tagID)) {
-                            String tagType = getTagType(tagID);  // Loại tag (Blue Goal, Red Goal, etc.)
+            // ===== APRILTAG DETECTION =====
+            java.util.List<AprilTagDetection> detections =
+                    aprilTagProcessor.getDetections();
 
-                            // Telemetry: Đưa ra ID, loại, và thông tin cơ bản
-                            telemetry.addData("AprilTag ID Detected", tagID);
-                            telemetry.addData("Tag Type", tagType);
-                            telemetry.addData("Center X (pixels)", detection.center.x);
-                            telemetry.addData("Center Y (pixels)", detection.center.y);
-                            telemetry.addData("Range (inches)", detection.ftcPose.range);
-                            telemetry.addData("Bearing (degrees)", detection.ftcPose.bearing);
-                        }
+            if (!detections.isEmpty()) {
+                for (AprilTagDetection detection : detections) {
+
+                    int tagID = detection.id;
+
+                    if (isTargetTag(tagID)) {
+
+                        telemetry.addData("AprilTag ID", tagID);
+                        telemetry.addData("Tag Type", getTagType(tagID));
+                        telemetry.addData(
+                                "Tag Center (px)",
+                                "(%.1f, %.1f)",
+                                detection.center.x,
+                                detection.center.y
+                        );
+                        telemetry.addData(
+                                "Range (in)",
+                                "%.1f",
+                                detection.ftcPose.range
+                        );
+                        telemetry.addData(
+                                "Bearing (deg)",
+                                "%.1f",
+                                detection.ftcPose.bearing
+                        );
                     }
-                } else {
-                    telemetry.addData("AprilTag Detected", "None");
-                    telemetry.addData("Status", "Scanning for AprilTags...");
                 }
-
-                telemetry.update();
-                sleep(20);  // Tránh vòng lặp quá nhanh
+            } else {
+                telemetry.addData("AprilTag", "None");
             }
 
-            // Dừng vision
-            visionPortal.close();
-            telemetry.addData("Status", "AprilTag Detection Stopped");
+            // ===== BALL DETECTION =====
+            if (ballProcessor.hasBall()) {
+                telemetry.addData("Ball", "FOUND");
+                telemetry.addData("Ball Color", ballProcessor.getColor());
+                telemetry.addData("Ball Area", "%.0f", ballProcessor.getArea());
+                telemetry.addData(
+                        "Ball Center (px)",
+                        "(%.1f, %.1f)",
+                        ballProcessor.getCenterX(),
+                        ballProcessor.getCenterY()
+                );
+            } else {
+                telemetry.addData("Ball", "NOT FOUND");
+            }
+
             telemetry.update();
-
-            // stopRobot() tự động gọi
+            sleep(20);
         }
 
-        // Hàm tiện ích: Kiểm tra nếu ID là target (trong mảng TARGET_TAG_IDS)
-        private boolean isTargetTag(int id) {
-            for (int targetId : TARGET_TAG_IDS) {
-                if (id == targetId) return true;
-            }
-            return false;
-        }
-
-        // Hàm tiện ích: Trả về loại tag dựa trên ID
-        private String getTagType(int id) {
-            switch (id) {
-                case 20: return "Blue Goal";      // Goal xanh
-                case 24: return "Red Goal";       // Goal đỏ
-                case 21: return "Spike Mark 1";
-                case 22: return "Spike Mark 2";
-                case 23: return "Spike Mark 3";
-                default: return "Unknown";
-            }
-        }
+        // ===== STOP =====
+        visionPortal.close();
     }
 
+    // ===== UTIL =====
+    private boolean isTargetTag(int id) {
+        for (int targetId : TARGET_TAG_IDS) {
+            if (id == targetId) return true;
+        }
+        return false;
+    }
+
+    private String getTagType(int id) {
+        switch (id) {
+            case 20: return "Blue Goal";
+            case 24: return "Red Goal";
+            case 21: return "Spike Mark 1";
+            case 22: return "Spike Mark 2";
+            case 23: return "Spike Mark 3";
+            default: return "Unknown";
+        }
+    }
+}
