@@ -16,4 +16,8 @@ dependencies {
     // Đổi về 9.2.0 vì bản 11.0.0 có thể chưa được đẩy lên maven
     implementation 'org.firstinspires.ftc:Tfod:9.2.0'
     implementation 'androidx.appcompat:appcompat:1.2.0'
+
+    implementation 'org.tensorflow:tensorflow-lite:2.4.0'  // Sử dụng phiên bản được chỉ định trong tài liệu, ví dụ 2.4.0; kiểm tra phiên bản mới nhất nếu tài liệu cập nhật
+    implementation 'org.tensorflow:tensorflow-lite-gpu:2.4.0'  // Nếu bạn muốn sử dụng GPU acceleration trên robot hỗ trợ
+
 }

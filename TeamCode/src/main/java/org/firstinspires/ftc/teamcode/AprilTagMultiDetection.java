@@ -26,7 +26,7 @@ public class AprilTagMultiDetection extends BaseOpMode {
 
         // ===== INIT ROBOT =====
         initRobot();
-           
+
         // ===== INIT PROCESSORS (CHỈ 1 LẦN) =====
         aprilTagProcessor = new AprilTagProcessor.Builder()
                 .setDrawTagOutline(true)
@@ -68,7 +68,7 @@ public class AprilTagMultiDetection extends BaseOpMode {
                                 detection.center.y
                         );
                         telemetry.addData(
-                                "Range (in)",
+                                "Range (in) - Khoảng cách từ camera đến AprilTag",
                                 "%.1f",
                                 detection.ftcPose.range
                         );
@@ -84,22 +84,24 @@ public class AprilTagMultiDetection extends BaseOpMode {
             }
 
             // ===== BALL DETECTION =====
-            if (ballProcessor.hasBall()) {
-                telemetry.addData("Ball", "FOUND");
-                telemetry.addData("Ball Color", ballProcessor.getColor());
-                telemetry.addData("Ball Area", "%.0f", ballProcessor.getArea());
-                telemetry.addData(
-                        "Ball Center (px)",
-                        "(%.1f, %.1f)",
-                        ballProcessor.getCenterX(),
-                        ballProcessor.getCenterY()
-                );
+            // Lấy top 3 bóng có diện tích lớn nhất, chỉ màu xanh lá và tím
+            java.util.List<BallVisionProcessor.Ball> topBalls = ballProcessor.getTopBalls(3);
+
+            if (!topBalls.isEmpty()) {
+                telemetry.addData("Top Balls (diện tích lớn nhất đến nhỏ nhất, chỉ xanh lá/tím)", "");
+                for (int i = 0; i < topBalls.size(); i++) {
+                    BallVisionProcessor.Ball ball = topBalls.get(i);
+                    telemetry.addData(
+                            "Ball " + (i + 1) + " - Màu: " + ball.getColor() + ", Diện tích: %.0f",
+                            ball.getArea()
+                    );
+                }
             } else {
-                telemetry.addData("Ball", "NOT FOUND");
+                telemetry.addData("Top Balls", "Không có bóng xanh lá/tím nào được phát hiện");
             }
 
             telemetry.update();
-            sleep(20);
+            sleep(50);  // Tăng thời gian ngủ để ổn định hơn (tránh quá tải)
         }
 
         // ===== STOP =====
