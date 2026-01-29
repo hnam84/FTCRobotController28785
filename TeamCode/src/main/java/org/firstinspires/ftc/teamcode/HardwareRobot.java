@@ -3,7 +3,6 @@ package org.firstinspires.ftc.teamcode;
 import static org.firstinspires.ftc.robotcore.external.BlocksOpModeCompanion.hardwareMap;
 
 import com.qualcomm.robotcore.hardware.DcMotor;
-import com.qualcomm.robotcore.hardware.DcMotorSimple;
 import com.qualcomm.robotcore.hardware.HardwareMap;
 import com.qualcomm.robotcore.hardware.Servo;
 //import com.qualcomm.robotcore.hardware.DistanceSensor;
@@ -28,16 +27,16 @@ public class HardwareRobot {
     // Phương thức khởi tạo hardware
     public void init(HardwareMap hardwareMap) {
 
-        // Ánh xạ 4 động cơ mecanum mới
+        // Ánh xạ 4 động cơ mecanum mới (đảm bảo tên khớp với cấu hình trên Driver Station)
         frontLeft = hardwareMap.get(DcMotor.class, "frontLeft");
         frontRight = hardwareMap.get(DcMotor.class, "frontRight");
         backLeft = hardwareMap.get(DcMotor.class, "backLeft");
         backRight = hardwareMap.get(DcMotor.class, "backRight");
 
         // Ánh xạ thiết bị khác (giữ nguyên)
-        shooterMotor1 = hardwareMap.get(DcMotor.class, "shooterMotor_1");
-        shooterMotor2 = hardwareMap.get(DcMotor.class, "shooterMotor_2");
-        intakeMotor = hardwareMap.get(DcMotor.class, "intakeMotor");
+        shooterMotor1 = hardwareMap.get(DcMotor.class, "shootermotor_1");
+        shooterMotor2 = hardwareMap.get(DcMotor.class, "shootermotor_2");
+        intakeMotor = hardwareMap.get(DcMotor.class, "intake_motor");
         sortMotor = hardwareMap.get(DcMotor.class, "sortMotor");  // Thêm motor sort
         servo1 = hardwareMap.get(Servo.class, "servo_1");
         servo2 = hardwareMap.get(Servo.class, "servo_2");
@@ -62,14 +61,13 @@ public class HardwareRobot {
         backRight.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         sortMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);  // Brake cho sortMotor
 
-        // Đặt chế độ encoder cho sortMotor và reset về 0
-        sortMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        // Đặt chế độ encoder cho sortMotor
         sortMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
         // Khởi tạo vị trí servo (giữ nguyên)
         servo1.setPosition(Constants.SERVO1_CLOSE);
-        servo2.setPosition(Constants.SERVO1_CLOSE);
-        servo3.setPosition(Constants.SERVO1_CLOSE);
+        servo2.setPosition(Constants.SERVO2_CLOSE);
+        servo3.setPosition(Constants.SERVO3_CLOSE);
     }
 
     // Phương thức dừng tất cả motor (cập nhật để bao gồm mecanum và sortMotor)
