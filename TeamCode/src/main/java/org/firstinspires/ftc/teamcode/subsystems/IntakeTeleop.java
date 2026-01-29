@@ -31,12 +31,12 @@ public class IntakeTeleop extends BaseOpMode {
             }
 
             // Đặt power cho motor (Đảm bảo biến 'robot' đã được khai báo public/protected trong BaseOpMode)
-            //if (robot != null && robot.intakeMotor != null) {
-                //robot.intakeMotor.setPower(intakePower);
+            if (robot != null && robot.intakeMotor != null) {
+                robot.intakeMotor.setPower(intakePower);
             }
 
             // Hiển thị telemetry
-            //telemetry.addData("Intake Power", intakePower);
+            telemetry.addData("Intake Power", intakePower);
             telemetry.update();
 
             // Nghỉ 20ms để tránh quá tải CPU
@@ -44,3 +44,4 @@ public class IntakeTeleop extends BaseOpMode {
         }
     }
 
+}

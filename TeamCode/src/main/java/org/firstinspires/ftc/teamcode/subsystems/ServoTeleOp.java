@@ -23,10 +23,11 @@ public class ServoTeleOp extends BaseOpMode {
             // Điều khiển servo gạt lên xuống
             if (gamepad1.x) {
                 // Nút X: Gạt xuống (close position)
-                robot.servo1.setPosition(Constants.SERVO1_CLOSE);  // Thay servo1 bằng servo2 hoặc servo3 nếu cần
-            } else if (gamepad1.y) {
-                // Nút Y: Gạt lên (open position)
+                robot.servo1.setPosition(Constants.SERVO1_CLOSE);
                 robot.servo1.setPosition(Constants.SERVO1_OPEN);
+// Thay servo1 bằng servo2 hoặc servo3 nếu cần
+            } else if (gamepad1.y) {
+
             }
 
             // Telemetry để debug
