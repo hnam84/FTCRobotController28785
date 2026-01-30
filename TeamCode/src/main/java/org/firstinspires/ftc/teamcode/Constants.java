@@ -8,7 +8,7 @@ public class Constants {
     public static final double MAX_DRIVE_SPEED = 0.8;
 
     // Tốc độ cho shooter và intake (TeleOp)
-    public static final double SHOOTER_SPEED = 0.8;
+    public static final double SHOOTER_SPEED = 0.7;
     public static final double INTAKE_SPEED = 1.0;
 
     // Ngưỡng deadzone cho joystick (để tránh rung)
@@ -22,12 +22,17 @@ public class Constants {
 
 // ==================== THÔNG SỐ CHO SERVO2 (SORT) ====================
 // Vị trí góc cho servo2 (thay thế sort motor)
+
     public static final double SERVO2_POSITION1 = 0.0;  // Góc 1 (ban đầu)
-    public static final double SERVO2_POSITION2 = 0.5;  // Góc 2
-    public static final double SERVO2_POSITION3 = 1.0;  // Góc 3
+    public static final double SERVO2_POSITION2 = 0.295;  // Góc 2
+    public static final double SERVO2_POSITION3 =0.53;  // Góc 3
+    public static final double SERVO2_CLOSE = 0.0;      // Đóng servo2
+    public static final double SERVO2_OPEN = 1.0;
+
 
     public static final double SERVO3_CLOSE = 0.0;  // Đóng servo3
-    public static final double SERVO3_OPEN = 1.0;   // Mở servo3
+    public static final double SERVO3_OPEN = 1.1
+            ;   // Mở servo3
 
     //                     PID CHUNG
     // PID chung cho tất cả hệ thống
@@ -70,19 +75,7 @@ public class Constants {
     // Khoảng cách mẫu cho Auto
     public static final double SAMPLE_DISTANCE_INCHES = 12.0;
 
-    //                  THÔNG SỐ CHO TANK DRIVE
-    // PID cho tank drive (chính xác trong Auto và TeleOp)
-    public static final double TANK_KP = 0.05;
-    public static final double TANK_KI = 0.0;
-    public static final double TANK_KD = 0.0;
 
-    // Feedforward cho tank drive
-    public static final double TANK_KS = 0.1;
-    public static final double TANK_KV = 0.02;
-    public static final double TANK_KA = 0.001;
-
-    // Tốc độ cho tank drive trong Auto
-    public static final double TANK_AUTO_SPEED = 0.5;
 
     // ==================== THÔNG SỐ CHO IMU ====================
     // Tên device IMU trong config (để ánh xạ trong HardwareRobot)
