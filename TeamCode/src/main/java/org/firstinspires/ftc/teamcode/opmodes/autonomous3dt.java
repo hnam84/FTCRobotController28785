@@ -13,9 +13,7 @@ import org.firstinspires.ftc.teamcode.HardwareRobot;
 public class autonomous3dt extends LinearOpMode {
     @Override
     public void runOpMode() throws InterruptedException {
-//(new Pose2d(-61,10, Math.toRadians(270))) th 2
-        //
-        Pose2d initialPose = new Pose2d(-48, 49, Math.toRadians(-226));
+        Pose2d initialPose = new Pose2d(-49, 50, Math.toRadians(-230));
 
 
         HardwareRobot.MecanumDrive drive = new HardwareRobot.MecanumDrive(hardwareMap, initialPose);
