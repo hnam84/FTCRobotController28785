@@ -70,17 +70,21 @@ public class HardwareRobot {
     public DcMotor backLeft;         //Bánh sau trái
     public DcMotor backRight;        //Bánh sau phải
 
-    // Các thiết bị khác (giữ nguyên)
-    //public DcMotor shooterMotor1;    //Motor bắn bóng
-    //public DcMotor shooterMotor2;    //Core hex xoay phần shooter
-    //public DcMotor intakeMotor;       //Core hẽ phần intake
     public Servo servo1;              //Để tạm cho phần đẩy bóng từ sort lên shooter
     public Servo servo2;              //Khai báo tạm chứ chx biết làm gì
     public Servo servo3;              //Vui lòng nhìn dòng chú thích phía trên
+    public DcMotor sortMotor;        //Motor sort
+    public DcMotor shooterMotor1;
+    public DcMotor shooterMotor2;
+    public DcMotor intakeMotor;
+
+
+
 
     // Phương thức khởi tạo hardware
     public void init(HardwareMap hardwareMap) {
 
+        // Ánh xạ 4 động cơ mecanum mới
         // Ánh xạ 4 động cơ mecanum mới (đảm bảo tên khớp với cấu hình trên Driver Station)
         frontLeft = hardwareMap.get(DcMotor.class, "frontLeft");
         frontRight = hardwareMap.get(DcMotor.class, "frontRight");
@@ -88,57 +92,42 @@ public class HardwareRobot {
         backRight = hardwareMap.get(DcMotor.class, "backRight");
 
         // Ánh xạ thiết bị khác (giữ nguyên)
-        //shooterMotor1 = hardwareMap.get(DcMotor.class, "shootermotor_1");
-        //shooterMotor2 = hardwareMap.get(DcMotor.class, "shootermotor_2");
-        //intakeMotor = hardwareMap.get(DcMotor.class, "intake_motor");
+        shooterMotor1 = hardwareMap.get(DcMotor.class, "shooterMotor_1");
+        shooterMotor2 = hardwareMap.get(DcMotor.class, "shooterMotor_2");
+        intakeMotor = hardwareMap.get(DcMotor.class, "intakeMotor");
+        shooterMotor1 = hardwareMap.get(DcMotor.class, "shootermotor_1");
+        shooterMotor2 = hardwareMap.get(DcMotor.class, "shootermotor_2");
+        intakeMotor = hardwareMap.get(DcMotor.class, "intake_motor");
+        DcMotor sortMotor = hardwareMap.get(DcMotor.class, "sortMotor");  // Thêm motor sort
         servo1 = hardwareMap.get(Servo.class, "servo_1");
         servo2 = hardwareMap.get(Servo.class, "servo_2");
         servo3 = hardwareMap.get(Servo.class, "servo_3");
 
-
-
-        // Cài đặt hướng cho mecanum (quan trọng: frontLeft và backLeft REVERSE để di chuyển đúng hướng)
-        frontLeft.setDirection(DcMotor.Direction.REVERSE);
-        backLeft.setDirection(DcMotor.Direction.REVERSE);
-        frontRight.setDirection(DcMotor.Direction.FORWARD);
-        backRight.setDirection(DcMotor.Direction.FORWARD);
-
-        // Cài đặt hướng cho motor khác (giữ nguyên)
-        //shooterMotor1.setDirection(DcMotor.Direction.FORWARD);
-        //shooterMotor2.setDirection(DcMotor.Direction.FORWARD);
-        //intakeMotor.setDirection(DcMotor.Direction.FORWARD);
-
-        // Đặt chế độ brake cho tất cả động cơ drivetrain (cả cũ và mới)
-
-        frontLeft.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        frontRight.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        backLeft.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         backRight.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        sortMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);  // Brake cho sortMotor
+
+        // Đặt chế độ encoder cho sortMotor và reset về 0
+        sortMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
+        // Đặt chế độ encoder cho sortMotor
+        sortMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);
 
         // Khởi tạo vị trí servo (giữ nguyên)
         servo1.setPosition(Constants.SERVO1_CLOSE);
-        servo2.setPosition(Constants.SERVO2_CLOSE);
+        servo2.setPosition(Constants.SERVO2_POSITION1_INTAKE);
         servo3.setPosition(Constants.SERVO3_CLOSE);
     }
 
-    // Phương thức dừng tất cả motor (cập nhật để bao gồm mecanum)
     public void stop() {
 
         frontLeft.setPower(0);
         frontRight.setPower(0);
         backLeft.setPower(0);
         backRight.setPower(0);
-        //shooterMotor1.setPower(0);
-        //shooterMotor2.setPower(0);
-        //intakeMotor.setPower(0);
+        shooterMotor1.setPower(0);
+        shooterMotor2.setPower(0);
+        intakeMotor.setPower(0);
     }
-
-    // Phương thức mới: Đặt tốc độ cho 4 bánh mecanum
     public void setMecanumPower(double frontLeftPower, double frontRightPower, double backLeftPower, double backRightPower) {
-        frontLeft.setPower(frontLeftPower);
-        frontRight.setPower(frontRightPower);
-        backLeft.setPower(backLeftPower);
-        backRight.setPower(backRightPower);
     }
 
     public static final class MecanumDrive {
@@ -147,7 +136,7 @@ public class HardwareRobot {
             // TODO: fill in these values based on the physical hub orientation
             //   see https://ftc-docs.firstinspires.org/en/latest/programming_resources/imu/imu.html?highlight=imu#physical-hub-mounting
             public RevHubOrientationOnRobot.LogoFacingDirection logoFacingDirection =
-                    RevHubOrientationOnRobot.LogoFacingDirection.RIGHT;
+                    RevHubOrientationOnRobot.LogoFacingDirection.LEFT;
             public RevHubOrientationOnRobot.UsbFacingDirection usbFacingDirection =
                     RevHubOrientationOnRobot.UsbFacingDirection.UP;
 
@@ -217,6 +206,7 @@ public class HardwareRobot {
             private Rotation2d lastHeading;
             private boolean initialized;
             private Pose2d pose;
+
 
             public DriveLocalizer(Pose2d pose) {
                 leftFront = new OverflowEncoder(new RawEncoder(MecanumDrive.this.leftFront));
@@ -306,6 +296,8 @@ public class HardwareRobot {
                 return twist.velocity().value();
             }
         }
+
+
 
         public MecanumDrive(HardwareMap hardwareMap, Pose2d pose) {
             LynxFirmware.throwIfModulesAreOutdated(hardwareMap);
@@ -593,5 +585,6 @@ public class HardwareRobot {
                     defaultVelConstraint, defaultAccelConstraint
             );
         }
+
     }
 }

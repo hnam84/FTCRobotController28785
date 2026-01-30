@@ -9,9 +9,7 @@ import org.firstinspires.ftc.teamcode.Constants;
 @TeleOp(name = "FTCRobotControler28785TeleOp", group = "TeleOp")
 public class FTCRobotControler28785TeleOp extends BaseOpMode {
 
-    // Biến cho PID sort (loại bỏ vì không dùng motor nữa)
-
-    // Biến để track trạng thái servo1 (thay đổi từ toggle sang hành động tạm thời)
+    boolean modeSort = true;
     boolean isServoActionActive = false;
     long servoActionStartTime = 0;
     final long SERVO_ACTION_DURATION = 500000000; // 500ms in nanoseconds
@@ -22,7 +20,7 @@ public class FTCRobotControler28785TeleOp extends BaseOpMode {
         initRobot();
 
         // Khởi tạo servo2 ở góc 1
-        robot.servo2.setPosition(Constants.SERVO2_POSITION1);
+        robot.servo2.setPosition(Constants.SERVO2_POSITION1_INTAKE);
 
         telemetry.addLine("Ready - Gamepad1: Mecanum & Intake, Gamepad2: Sort (Servo2), Shooter & Servo1");
         telemetry.update();
@@ -93,21 +91,44 @@ public class FTCRobotControler28785TeleOp extends BaseOpMode {
             }
 
             // ==================== PHẦN SORT (Gamepad2, dùng servo2) ====================
-            // Điều khiển servo2 bằng X (góc 1), Y (góc 2), B (góc 3)
-            if (gamepad2.x) {
-                robot.servo2.setPosition(Constants.SERVO2_POSITION1);
-            } else if (gamepad2.y) {
-                robot.servo2.setPosition(Constants.SERVO2_POSITION2);
-            } else if (gamepad2.b) {
-                robot.servo2.setPosition(Constants.SERVO2_POSITION3);
+            if (gamepad2.a) {
+                modeSort = !modeSort; // Toggle chế độ
+                sleep(200);
+            }
+            // Điều khiển servo2 dựa trên chế độ
+            if (modeSort) {
+                // MODE 1: Chỉnh các phần intake
+                if (gamepad2.x) {
+                    robot.servo2.setPosition(Constants.SERVO2_POSITION1_INTAKE);
+                } else if (gamepad2.y) {
+                    robot.servo2.setPosition(Constants.SERVO2_POSITION2_INTAKE);
+                } else if (gamepad2.b) {
+                    robot.servo2.setPosition(Constants.SERVO2_POSITION3_INTAKE);
+                }
+            } else {
+                // Chế độ 2: X (góc 4), Y (góc 5), B (góc 6)
+                if (gamepad2.x) {
+                    robot.servo2.setPosition(Constants.SERVO2_POSITION1_SHOOTER);
+                } else if (gamepad2.y) {
+                    robot.servo2.setPosition(Constants.SERVO2_POSITION2_SHOOTER);
+                } else if (gamepad2.b) {
+                    robot.servo2.setPosition(Constants.SERVO2_POSITION3_SHOOTER);
+                }
             }
 
             // ==================== PHẦN SHOOTER (Gamepad2) ====================
             double shooterPower = 0.0;
 
             // Nếu nhấn bất kỳ nút dpad nào (up, down, left, right) HOẶC L2, cả hai shooter quay cùng chiều với SHOOTER_SPEED
-            if (gamepad2.dpad_up || gamepad2.dpad_down || gamepad2.dpad_left || gamepad2.dpad_right || gamepad2.left_trigger > 0.1) {
-                shooterPower = Constants.SHOOTER_SPEED; // Quay cùng chiều (forward)
+            if (gamepad2.left_bumper) {
+                if (gamepad2.dpad_up || gamepad2.dpad_down || gamepad2.dpad_left || gamepad2.dpad_right) {
+                    shooterPower = Constants.NEAR_SHOOTER_SPEED; // Quay cùng chiều (forward) với tốc độ thấp
+                }
+            }
+            if (gamepad2.left_trigger > 0.1) {
+                if (gamepad2.dpad_up || gamepad2.dpad_down || gamepad2.dpad_left || gamepad2.dpad_right) {
+                    shooterPower = Constants.FAR_SHOOTER_SPEED; // Quay cùng chiều (forward) với tốc độ cao
+                }
             }
 
             // Đặt power cho cả hai shooter motors

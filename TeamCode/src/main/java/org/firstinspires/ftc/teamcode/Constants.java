@@ -8,7 +8,8 @@ public class Constants {
     public static final double MAX_DRIVE_SPEED = 0.8;
 
     // Tốc độ cho shooter và intake (TeleOp)
-    public static final double SHOOTER_SPEED = 0.7;
+    public static final double NEAR_SHOOTER_SPEED = 0.7;
+    public static final double FAR_SHOOTER_SPEED = 1.0;
     public static final double INTAKE_SPEED = 1.0;
 
     // Ngưỡng deadzone cho joystick (để tránh rung)
@@ -23,9 +24,15 @@ public class Constants {
 // ==================== THÔNG SỐ CHO SERVO2 (SORT) ====================
 // Vị trí góc cho servo2 (thay thế sort motor)
 
-    public static final double SERVO2_POSITION1 = 0.0;  // Góc 1 (ban đầu)
-    public static final double SERVO2_POSITION2 = 0.295;  // Góc 2
-    public static final double SERVO2_POSITION3 =0.53;  // Góc 3
+    //Vị trí góc cho phần shooter
+    public static final double SERVO2_POSITION1_SHOOTER = 0.0;  // Góc 1 (ban đầu)
+    public static final double SERVO2_POSITION2_SHOOTER = 0.295;  // Góc 2
+    public static final double SERVO2_POSITION3_SHOOTER =0.53;  // Góc 3
+
+    //Vị tr góc cho phần intake
+    public static final double SERVO2_POSITION1_INTAKE = 0.1425;  // Góc 1 (ban đầu)
+    public static final double SERVO2_POSITION2_INTAKE = 0.412;  // Góc 2
+    public static final double SERVO2_POSITION3_INTAKE =0.6725;  // Góc 3
     public static final double SERVO2_CLOSE = 0.0;      // Đóng servo2
     public static final double SERVO2_OPEN = 1.0;
 

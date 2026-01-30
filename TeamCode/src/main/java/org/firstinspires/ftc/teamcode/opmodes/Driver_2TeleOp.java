@@ -1,9 +1,6 @@
 package org.firstinspires.ftc.teamcode.opmodes;
 
-
-
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-import com.qualcomm.robotcore.hardware.DcMotorEx;
 
 import org.firstinspires.ftc.teamcode.BaseOpMode;
 import org.firstinspires.ftc.teamcode.Constants;
@@ -11,33 +8,21 @@ import org.firstinspires.ftc.teamcode.Constants;
 @TeleOp(name = "Driver_2TeleOp", group = "TeleOp")
 public class Driver_2TeleOp extends BaseOpMode {
 
-    // Biến cho PID sort (từ SortV2TeleOp)
-    static final double TICKS_PER_REV = 288.0;
-    static final double TICKS_PER_DEGREE = TICKS_PER_REV / 360.0;
-
-    double kP = 0.02;
-    double kI = 0.0;
-    double kD = 0.0008;
-    double kS = 0.08;   // power tối thiểu thắng ma sát
-
-    double integral = 0;
-    double lastError = 0;
-    long lastTime = 0;
-
-    boolean rotated = false;
-
-    // Biến để track trạng thái servo1 (toggle)
-    boolean servo1Open = false; // Ban đầu đóng (SERVO1_CLOSE)
+    // Biến để track trạng thái servo1 (hành động tạm thời)
+    boolean isServoActionActive = false;
+    boolean modeSort = true;
+    long servoActionStartTime = 0;
+    final long SERVO_ACTION_DURATION = 500000000; // 500ms in nanoseconds
 
     @Override
     public void runOpMode() throws InterruptedException {
         // Khởi tạo robot
         initRobot();
 
-        // Khởi tạo biến thời gian cho PID
-        lastTime = System.nanoTime();
+        // Khởi tạo servo2 ở góc 1
+        robot.servo2.setPosition(Constants.SERVO2_POSITION1_INTAKE);
 
-        telemetry.addLine("Ready - Press B to rotate sort 120 degrees, use D-pad for shooters, R2 for servo1");
+        telemetry.addLine("Ready - Gamepad2: Sort (Servo2), Shooter & Servo1");
         telemetry.update();
 
         // Chờ start
@@ -45,26 +30,45 @@ public class Driver_2TeleOp extends BaseOpMode {
 
         // Vòng lặp chính
         while (opModeIsActive()) {
-            // ==================== PHẦN SORT ====================
-            // Bấm B quay 120 độ (chỉ 1 lần)
-            if (gamepad1.b && !rotated) {
-                rotateToAnglePID(120);
-                rotated = true;
+            // ==================== PHẦN SORT (Gamepad2, dùng servo2) ====================
+            if (gamepad2.a) {
+                modeSort = !modeSort; // Toggle chế độ
+                sleep(200);
+            }
+            // Điều khiển servo2 dựa trên chế độ
+            if (modeSort) {
+                // MODE 1: Chỉnh các phần intake
+                if (gamepad2.x) {
+                    robot.servo2.setPosition(Constants.SERVO2_POSITION1_INTAKE);
+                } else if (gamepad2.y) {
+                    robot.servo2.setPosition(Constants.SERVO2_POSITION2_INTAKE);
+                } else if (gamepad2.b) {
+                    robot.servo2.setPosition(Constants.SERVO2_POSITION3_INTAKE);
+                }
+            } else {
+                // Chế độ 2: X (góc 4), Y (góc 5), B (góc 6)
+                if (gamepad2.x) {
+                    robot.servo2.setPosition(Constants.SERVO2_POSITION1_SHOOTER);
+                } else if (gamepad2.y) {
+                    robot.servo2.setPosition(Constants.SERVO2_POSITION2_SHOOTER);
+                } else if (gamepad2.b) {
+                    robot.servo2.setPosition(Constants.SERVO2_POSITION3_SHOOTER);
+                }
             }
 
-            // Reset bằng nút A
-            if (gamepad1.a) {
-                robot.sortMotor.setMode(DcMotorEx.RunMode.STOP_AND_RESET_ENCODER);
-                robot.sortMotor.setMode(DcMotorEx.RunMode.RUN_USING_ENCODER);
-                rotated = false;
-            }
-
-            // ==================== PHẦN SHOOTER ====================
+            // ==================== PHẦN SHOOTER (Gamepad2) ====================
             double shooterPower = 0.0;
 
-            // Nếu nhấn bất kỳ nút dpad nào (up, down, left, right), cả hai shooter quay cùng chiều với SHOOTER_SPEED
-            if (gamepad1.dpad_up || gamepad1.dpad_down || gamepad1.dpad_left || gamepad1.dpad_right) {
-                shooterPower = Constants.SHOOTER_SPEED; // Quay cùng chiều (forward)
+            // Nếu nhấn bất kỳ nút dpad nào (up, down, left, right) HOẶC L2, cả hai shooter quay cùng chiều với SHOOTER_SPEED
+            if (gamepad2.left_bumper) {
+                if (gamepad2.dpad_up || gamepad2.dpad_down || gamepad2.dpad_left || gamepad2.dpad_right) {
+                    shooterPower = Constants.NEAR_SHOOTER_SPEED; // Quay cùng chiều (forward) với tốc độ thấp
+                }
+            }
+            if (gamepad2.left_trigger > 0.1) {
+                if (gamepad2.dpad_up || gamepad2.dpad_down || gamepad2.dpad_left || gamepad2.dpad_right) {
+                    shooterPower = Constants.FAR_SHOOTER_SPEED; // Quay cùng chiều (forward) với tốc độ cao
+                }
             }
 
             // Đặt power cho cả hai shooter motors
@@ -75,23 +79,23 @@ public class Driver_2TeleOp extends BaseOpMode {
                 robot.shooterMotor2.setPower(shooterPower);
             }
 
-            // ==================== PHẦN SERVO1 ====================
-            // Bấm R2 để toggle servo1 giữa đóng và mở (0.0 và 0.5, giả sử 90 độ)
-            if (gamepad1.right_trigger > 0.1) { // R2 pressed
-                servo1Open = !servo1Open; // Toggle trạng thái
-                if (servo1Open) {
-                    robot.servo1.setPosition(Constants.SERVO1_OPEN); // Mở (0.5)
-                } else {
-                    robot.servo1.setPosition(Constants.SERVO1_CLOSE); // Đóng (0.0)
-                }
-                // Nghỉ một chút để tránh toggle liên tục nếu giữ nút
-                sleep(200);
+            // ==================== PHẦN SERVO1 (Gamepad2) ====================
+            // Khi nhấn R2, servo1 quay 90 độ (từ close sang open), chờ 500ms, rồi quay lại close
+            if (gamepad2.right_trigger > 0.1 && !isServoActionActive) {
+                isServoActionActive = true;
+                servoActionStartTime = System.nanoTime();
+                robot.servo1.setPosition(Constants.SERVO1_OPEN); // Quay 90 độ (mở)
+            }
+
+            // Kiểm tra nếu hành động servo đang active và thời gian đã đủ 500ms, quay lại vị trí cũ
+            if (isServoActionActive && (System.nanoTime() - servoActionStartTime) > SERVO_ACTION_DURATION) {
+                robot.servo1.setPosition(Constants.SERVO1_CLOSE); // Quay lại vị trí cũ (đóng)
+                isServoActionActive = false;
             }
 
             // ==================== TELEMETRY ====================
-            telemetry.addData("Sort Encoder", robot.sortMotor.getCurrentPosition());
             telemetry.addData("Shooter Power", shooterPower);
-            telemetry.addData("Servo1 Position", servo1Open ? Constants.SERVO1_OPEN : Constants.SERVO1_CLOSE);
+            telemetry.addData("Servo1 Action Active", isServoActionActive);
             telemetry.update();
 
             // Nghỉ 20ms để tránh quá tải CPU
@@ -100,51 +104,5 @@ public class Driver_2TeleOp extends BaseOpMode {
 
         // Dừng robot khi kết thúc
         stopRobot();
-    }
-
-    // Phương thức quay sort bằng PID (từ SortV2TeleOp, điều chỉnh để dùng robot.sortMotor)
-    void rotateToAnglePID(double angle) {
-        double targetTicks = angle * TICKS_PER_DEGREE;
-
-        integral = 0;
-        lastError = 0;
-        lastTime = System.nanoTime();
-
-        while (opModeIsActive()) {
-            double current = robot.sortMotor.getCurrentPosition();
-            double error = targetTicks - current;
-
-            long now = System.nanoTime();
-            double deltaTime = (now - lastTime) / 1e9;
-            lastTime = now;
-
-            integral += error * deltaTime;
-            double derivative = (error - lastError) / deltaTime;
-            lastError = error;
-
-            double power = (kP * error) + (kI * integral) + (kD * derivative);
-
-            // Minimum power thắng ma sát
-            if (Math.abs(power) < kS) {
-                power = Math.signum(power) * kS;
-            }
-
-            // Giới hạn công suất
-            power = Math.max(-0.4, Math.min(0.4, power));
-            robot.sortMotor.setPower(power);
-
-            telemetry.addData("Sort Target (ticks)", targetTicks);
-            telemetry.addData("Sort Current (ticks)", current);
-            telemetry.addData("Sort Error", error);
-            telemetry.addData("Sort Power", power);
-            telemetry.update();
-
-            // Sai số nhỏ thì dừng
-            if (Math.abs(error) < 3) break;
-
-            idle();
-        }
-
-        robot.sortMotor.setPower(0);
     }
 }
