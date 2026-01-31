@@ -5,7 +5,7 @@ import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 public class Constants {
     //              TỐC ĐỘ VÀ ĐIỀU KHIỂN CƠ BẢN
     // Tốc độ tối đa cho drive motors (TeleOp)
-    public static final double MAX_DRIVE_SPEED = 0.8;
+    public static final double MAX_DRIVE_SPEED = 0.6;
 
     // Tốc độ cho shooter và intake (TeleOp)
     public static final double NEAR_SHOOTER_SPEED = 0.7;
@@ -31,7 +31,7 @@ public class Constants {
 
     //Vị tr góc cho phần intake
     public static final double SERVO2_POSITION1_INTAKE = 0.1425;  // Góc 1 (ban đầu)
-    public static final double SERVO2_POSITION2_INTAKE = 0.412;  // Góc 2
+    public static final double SERVO2_POSITION2_INTAKE = 0.412;  // Góc 2 chuẩn
     public static final double SERVO2_POSITION3_INTAKE =0.6725;  // Góc 3
     public static final double SERVO2_CLOSE = 0.0;      // Đóng servo2
     public static final double SERVO2_OPEN = 1.0;

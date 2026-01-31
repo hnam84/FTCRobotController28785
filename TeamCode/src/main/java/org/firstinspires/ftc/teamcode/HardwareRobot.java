@@ -80,7 +80,6 @@ public class HardwareRobot {
 
 
 
-
     // Phương thức khởi tạo hardware
     public void init(HardwareMap hardwareMap) {
 
@@ -91,14 +90,18 @@ public class HardwareRobot {
         backLeft = hardwareMap.get(DcMotor.class, "backLeft");
         backRight = hardwareMap.get(DcMotor.class, "backRight");
 
+        // Đảo ngược hướng của các động cơ bên phải.
+        // Đây là cấu hình phổ biến cho robot mecanum.
+        // Nếu robot của bạn đi sai hướng, bạn có thể cần thay đổi điều này.
+        frontRight.setDirection(DcMotorSimple.Direction.REVERSE);
+        backRight.setDirection(DcMotorSimple.Direction.REVERSE);
+
+
         // Ánh xạ thiết bị khác (giữ nguyên)
-        shooterMotor1 = hardwareMap.get(DcMotor.class, "shooterMotor_1");
-        shooterMotor2 = hardwareMap.get(DcMotor.class, "shooterMotor_2");
-        intakeMotor = hardwareMap.get(DcMotor.class, "intakeMotor");
         shooterMotor1 = hardwareMap.get(DcMotor.class, "shootermotor_1");
         shooterMotor2 = hardwareMap.get(DcMotor.class, "shootermotor_2");
         intakeMotor = hardwareMap.get(DcMotor.class, "intake_motor");
-        DcMotor sortMotor = hardwareMap.get(DcMotor.class, "sortMotor");  // Thêm motor sort
+        sortMotor = hardwareMap.get(DcMotor.class, "sortMotor");  // Thêm motor sort
         servo1 = hardwareMap.get(Servo.class, "servo_1");
         servo2 = hardwareMap.get(Servo.class, "servo_2");
         servo3 = hardwareMap.get(Servo.class, "servo_3");
@@ -128,6 +131,10 @@ public class HardwareRobot {
         intakeMotor.setPower(0);
     }
     public void setMecanumPower(double frontLeftPower, double frontRightPower, double backLeftPower, double backRightPower) {
+        frontLeft.setPower(frontLeftPower);
+        frontRight.setPower(frontRightPower);
+        backLeft.setPower(backLeftPower);
+        backRight.setPower(backRightPower);
     }
 
     public static final class MecanumDrive {
@@ -350,8 +357,10 @@ public class HardwareRobot {
                 maxPowerMag = Math.max(maxPowerMag, power.value());
             }
 
+            double leftBackCorrection = 0.95; // Giảm công suất của động cơ sau bên trái đi 5%
+
             leftFront.setPower(wheelVels.leftFront.get(0) / maxPowerMag);
-            leftBack.setPower(wheelVels.leftBack.get(0) / maxPowerMag);
+            leftBack.setPower(wheelVels.leftBack.get(0) / maxPowerMag * leftBackCorrection);
             rightBack.setPower(wheelVels.rightBack.get(0) / maxPowerMag);
             rightFront.setPower(wheelVels.rightFront.get(0) / maxPowerMag);
         }
@@ -440,10 +449,10 @@ public class HardwareRobot {
                 drawPoseHistory(c);
 
                 c.setStroke("#4CAF50");
-                Drawing.drawRobot(c, txWorldTarget.value());
+                // Drawing.drawRobot(c, txWorldTarget.value());
 
                 c.setStroke("#3F51B5");
-                Drawing.drawRobot(c, localizer.getPose());
+                // Drawing.drawRobot(c, localizer.getPose());
 
                 c.setStroke("#4CAF50FF");
                 c.setStrokeWidth(1);
@@ -521,10 +530,10 @@ public class HardwareRobot {
                 drawPoseHistory(c);
 
                 c.setStroke("#4CAF50");
-                Drawing.drawRobot(c, txWorldTarget.value());
+                // Drawing.drawRobot(c, txWorldTarget.value());
 
                 c.setStroke("#3F51B5");
-                Drawing.drawRobot(c, localizer.getPose());
+                //Drawing.drawRobot(c, localizer.getPose());
 
                 c.setStroke("#7C4DFFFF");
                 c.fillCircle(turn.beginPose.position.x, turn.beginPose.position.y, 2);

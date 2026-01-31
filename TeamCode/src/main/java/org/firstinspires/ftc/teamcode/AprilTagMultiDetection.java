@@ -5,21 +5,23 @@ import android.util.Size;
 import com.qualcomm.robotcore.eventloop.opmode.Autonomous;
 
 import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
+import org.firstinspires.ftc.robotcore.external.hardware.camera.controls.ExposureControl;
+import org.firstinspires.ftc.robotcore.external.hardware.camera.controls.GainControl;
 import org.firstinspires.ftc.vision.VisionPortal;
 import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
 import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
-import org.firstinspires.ftc.teamcode.vision.BallVisionProcessor;
+
+import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 @Autonomous(name = "AprilTagMultiDetection", group = "Linear OpMode")
 public class AprilTagMultiDetection extends BaseOpMode {
 
-    // ===== Vision =====
+    // ===== VISION =====
     private VisionPortal visionPortal;
     private AprilTagProcessor aprilTagProcessor;
-    private BallVisionProcessor ballProcessor;
 
-    // AprilTag IDs quan tâm
-    private static final int[] TARGET_TAG_IDS = {20, 21, 22, 23, 24};
+    private static final int[] TARGET_TAG_IDS = {20, 21, 22, 23, 24};  // Thêm 25 nếu cần
 
     @Override
     public void runOpMode() throws InterruptedException {
@@ -27,20 +29,35 @@ public class AprilTagMultiDetection extends BaseOpMode {
         // ===== INIT ROBOT =====
         initRobot();
 
-        // ===== INIT PROCESSORS (CHỈ 1 LẦN) =====
+        // ===== PROCESSORS =====
         aprilTagProcessor = new AprilTagProcessor.Builder()
                 .setDrawTagOutline(true)
                 .build();
 
-        ballProcessor = new BallVisionProcessor();
-
-        // ===== INIT CAMERA + VISION PORTAL =====
+        // ===== CAMERA =====
         visionPortal = new VisionPortal.Builder()
                 .setCamera(hardwareMap.get(WebcamName.class, "Webcam 1"))
                 .setCameraResolution(new Size(640, 480))
-                .addProcessor(aprilTagProcessor) // AprilTag
-                .addProcessor(ballProcessor)     // Ball + Color
+                .addProcessor(aprilTagProcessor)
                 .build();
+
+        // ===== CHỜ CAMERA READY =====
+        while (!isStopRequested() && visionPortal.getCameraState() != VisionPortal.CameraState.STREAMING) {
+            sleep(20);
+        }
+
+        // ===== LOCK CAMERA =====
+        ExposureControl exposure = visionPortal.getCameraControl(ExposureControl.class);
+        GainControl gain = visionPortal.getCameraControl(GainControl.class);
+
+        if (exposure != null && exposure.isExposureSupported()) {
+            exposure.setMode(ExposureControl.Mode.Manual);
+            exposure.setExposure(15, TimeUnit.MILLISECONDS);
+        }
+
+        if (gain != null) {
+            gain.setGain(50);
+        }
 
         // ===== WAIT START =====
         waitForStartWithTelemetry();
@@ -48,60 +65,62 @@ public class AprilTagMultiDetection extends BaseOpMode {
         // ===== MAIN LOOP =====
         while (opModeIsActive()) {
 
-            // ===== APRILTAG DETECTION =====
-            java.util.List<AprilTagDetection> detections =
-                    aprilTagProcessor.getDetections();
+            telemetry.clear();
+
+            // ===== APRILTAG & SCENARIO LOGIC =====
+            List<AprilTagDetection> detections = aprilTagProcessor.getDetections();
 
             if (!detections.isEmpty()) {
-                for (AprilTagDetection detection : detections) {
+                for (AprilTagDetection d : detections) {
+                    if (isTargetTag(d.id)) {
+                        // 1. Hiển thị thông tin cơ bản
+                        telemetry.addData("ID Detect", d.id);
+                        telemetry.addData("Pos (in)", "%.1f", d.ftcPose.range);
 
-                    int tagID = detection.id;
+                        // 2. XỬ LÝ KỊCH BẢN BẮN BÓNG (LOGIC MỚI THÊM)
+                        String[] shootingOrder = null;
 
-                    if (isTargetTag(tagID)) {
+                        switch (d.id) {
+                            case 21:
+                                // Xanh -> Tím -> Tím
+                                shootingOrder = new String[]{"BLUE", "PURPLE", "PURPLE"};
+                                telemetry.addData(">> STRATEGY", "CASE 21 (Blue Start)");
+                                break;
+                            case 22:
+                                // Tím -> Xanh -> Tím
+                                shootingOrder = new String[]{"PURPLE", "BLUE", "PURPLE"};
+                                telemetry.addData(">> STRATEGY", "CASE 22 (Purple Start)");
+                                break;
+                            case 23:
+                                // Tím -> Tím -> Xanh
+                                shootingOrder = new String[]{"PURPLE", "PURPLE", "BLUE"};
+                                telemetry.addData(">> GOAL", "CASE 23 (Double Purple)");
+                                break;
+                            case 24:
+                                telemetry.addData(">> GOAL", "BLUE");
+                                break;
+                            case 25:
+                                telemetry.addData(">> GOAL", "RED");
+                                break;
+                            // Thêm case 20 nếu cần
+                        }
 
-                        telemetry.addData("AprilTag ID", tagID);
-                        telemetry.addData("Tag Type", getTagType(tagID));
-                        telemetry.addData(
-                                "Tag Center (px)",
-                                "(%.1f, %.1f)",
-                                detection.center.x,
-                                detection.center.y
-                        );
-                        telemetry.addData(
-                                "Range (in) - Khoảng cách từ camera đến AprilTag",
-                                "%.1f",
-                                detection.ftcPose.range
-                        );
-                        telemetry.addData(
-                                "Bearing (deg)",
-                                "%.1f",
-                                detection.ftcPose.bearing
-                        );
+                        // 3. Hiển thị danh sách bóng cần bắn
+                        if (shootingOrder != null) {
+                            telemetry.addLine("--- SHOOTING ORDER ---");
+                            for (int i = 0; i < shootingOrder.length; i++) {
+                                telemetry.addData("   Shot #" + (i + 1), shootingOrder[i]);
+                            }
+                            telemetry.addLine("----------------------");
+                        }
                     }
                 }
             } else {
-                telemetry.addData("AprilTag", "None");
-            }
-
-            // ===== BALL DETECTION =====
-            // Lấy top 3 bóng có diện tích lớn nhất, chỉ màu xanh lá và tím
-            java.util.List<BallVisionProcessor.Ball> topBalls = ballProcessor.getTopBalls(3);
-
-            if (!topBalls.isEmpty()) {
-                telemetry.addData("Top Balls (diện tích lớn nhất đến nhỏ nhất, chỉ xanh lá/tím)", "");
-                for (int i = 0; i < topBalls.size(); i++) {
-                    BallVisionProcessor.Ball ball = topBalls.get(i);
-                    telemetry.addData(
-                            "Ball " + (i + 1) + " - Màu: " + ball.getColor() + ", Diện tích: %.0f",
-                            ball.getArea()
-                    );
-                }
-            } else {
-                telemetry.addData("Top Balls", "Không có bóng xanh lá/tím nào được phát hiện");
+                telemetry.addData("AprilTag", "Searching...");
             }
 
             telemetry.update();
-            sleep(50);  // Tăng thời gian ngủ để ổn định hơn (tránh quá tải)
+            sleep(20);  // Tăng từ 10ms để ổn định hơn
         }
 
         // ===== STOP =====
@@ -113,17 +132,6 @@ public class AprilTagMultiDetection extends BaseOpMode {
         for (int targetId : TARGET_TAG_IDS) {
             if (id == targetId) return true;
         }
-        return false;
-    }
-
-    private String getTagType(int id) {
-        switch (id) {
-            case 20: return "Blue Goal";
-            case 24: return "Red Goal";
-            case 21: return "Spike Mark 1";
-            case 22: return "Spike Mark 2";
-            case 23: return "Spike Mark 3";
-            default: return "Unknown";
-        }
+        return false;  // Đã thêm dấu chấm phẩy
     }
 }
