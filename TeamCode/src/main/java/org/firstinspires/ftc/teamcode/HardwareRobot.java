@@ -93,9 +93,10 @@ public class HardwareRobot {
         // Đảo ngược hướng của các động cơ bên phải.
         // Đây là cấu hình phổ biến cho robot mecanum.
         // Nếu robot của bạn đi sai hướng, bạn có thể cần thay đổi điều này.
-        frontRight.setDirection(DcMotorSimple.Direction.REVERSE);
-        backRight.setDirection(DcMotorSimple.Direction.REVERSE);
-
+        frontRight.setDirection(DcMotorSimple.Direction.FORWARD);
+        backRight.setDirection(DcMotorSimple.Direction. FORWARD);
+        frontLeft.setDirection(DcMotorSimple.Direction.REVERSE);
+        backLeft.setDirection(DcMotorSimple.Direction. REVERSE);
 
         // Ánh xạ thiết bị khác (giữ nguyên)
         shooterMotor1 = hardwareMap.get(DcMotor.class, "shootermotor_1");

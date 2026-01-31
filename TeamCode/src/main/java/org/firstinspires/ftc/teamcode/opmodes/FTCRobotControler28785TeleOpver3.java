@@ -1,13 +1,12 @@
 package org.firstinspires.ftc.teamcode.opmodes;
 
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
-import com.qualcomm.robotcore.hardware.DcMotorEx;
 
 import org.firstinspires.ftc.teamcode.BaseOpMode;
 import org.firstinspires.ftc.teamcode.Constants;
 
 @TeleOp(name = "FTCRobotControler28785TeleOp", group = "TeleOp")
-public class FTCRobotControler28785TeleOp extends BaseOpMode {
+public class FTCRobotControler28785TeleOpver3 extends BaseOpMode {
 
     boolean modeSort = true;
     boolean isServoActionActive = false;
@@ -32,10 +31,14 @@ public class FTCRobotControler28785TeleOp extends BaseOpMode {
         while (opModeIsActive()) {
             // ==================== PHẦN DI CHUYỂN MECANUM (Gamepad1) ====================
             // Joystick trái: y cho tiến/lùi, x cho sang ngang
-            double y = -gamepad1.left_stick_y; // Tiến (lên) / lùi (xuống)
-            double x = gamepad1.left_stick_x;   // Sang trái / phải
-            double rx = 0; // Xoay, mặc định 0
+            // double y = -gamepad1.left_stick_y; // Tiến (lên) / lùi (xuống)
+            //  double x = gamepad1.left_stick_x;   // Sang trái / phải
+           //     double rx = 0; // Xoay, mặc định 0
 
+
+            double y = -gamepad1.right_stick_y; // Tiến (lên) / lùi (xuống)
+            double x = gamepad1.right_stick_x;   // Sang trái / phải
+            double rx = gamepad1.right_stick_x; // Xoay, mặc định 0
             // Áp dụng deadzone từ Constants
             if (Math.abs(y) < Constants.JOYSTICK_DEADZONE) y = 0;
             if (Math.abs(x) < Constants.JOYSTICK_DEADZONE) x = 0;
@@ -47,8 +50,8 @@ public class FTCRobotControler28785TeleOp extends BaseOpMode {
             }
 
             // Nút dpad left/right HOẶC x/b cho xoay
-            if (gamepad1.dpad_left || gamepad1.x) rx = -1; // Xoay trái
-            if (gamepad1.dpad_right || gamepad1.b) rx = 1;  // Xoay phải
+          //  if (gamepad1.dpad_left || gamepad1.x) rx = -1; // Xoay trái
+            // if (gamepad1.dpad_right || gamepad1.b) rx = 1;  // Xoay phải
 
             // Tính tốc độ cho 4 bánh mecanum
             double frontLeftPower = y + x + rx;
