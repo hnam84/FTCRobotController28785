@@ -20,7 +20,7 @@ public class autonomous4dd extends LinearOpMode {
         HardwareRobot.MecanumDrive drive = new HardwareRobot.MecanumDrive(hardwareMap, initialPose);
 
         Action trajectoryAction = drive.actionBuilder(initialPose)
-                .strafeToLinearHeading(new Vector2d(61, 40), Math.toRadians(180))
+                .strafeToLinearHeading(new Vector2d(61, 50), Math.toRadians(180))
                 .build();
 
         waitForStart();

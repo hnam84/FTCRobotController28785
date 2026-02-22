@@ -110,7 +110,9 @@ public class HardwareRobot {
         backRight.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
         sortMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);  // Brake cho sortMotor
 
-        // Đặt chế độ encoder cho sortMotor và reset về 0
+        shooterMotor1.setDirection(DcMotorSimple.Direction.REVERSE);
+        shooterMotor2.setDirection(DcMotorSimple.Direction.REVERSE);
+
         sortMotor.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
         // Đặt chế độ encoder cho sortMotor
         sortMotor.setMode(DcMotor.RunMode.RUN_USING_ENCODER);

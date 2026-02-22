@@ -5,7 +5,7 @@ import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 public class Constants {
     //              TỐC ĐỘ VÀ ĐIỀU KHIỂN CƠ BẢN
     // Tốc độ tối đa cho drive motors (TeleOp)
-    public static final double MAX_DRIVE_SPEED = 0.7;
+    public static final double MAX_DRIVE_SPEED = 1;
 
     // Tốc độ cho shooter và intake (TeleOp)
     public static final double NEAR_SHOOTER_SPEED = 0.7;

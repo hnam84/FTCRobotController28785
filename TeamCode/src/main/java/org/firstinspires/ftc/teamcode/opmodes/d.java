@@ -28,8 +28,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-@Autonomous(name = "auto3")
-public class auto2x extends LinearOpMode {
+@Autonomous(name = "auto4")
+public class d extends LinearOpMode {
     private DcMotor intakeMotor, shooterMotor1, shooterMotor2;
     private Servo servoPush, servoSort;
     private HardwareRobot.MecanumDrive drive;
@@ -43,23 +43,24 @@ public class auto2x extends LinearOpMode {
         initHardware();
         initVision();
 
-        // Khởi tạo Constraint tốc độ thấp để hút bóng an toàn
-        VelConstraint superSlowVel = new MinVelConstraint(Arrays.asList(
+        // Tốc độ cực chậm để "nhích" vào lấy từng bóng
+        VelConstraint crawlVel = new MinVelConstraint(Arrays.asList(
                 new TranslationalVelConstraint(10.0),
-                new AngularVelConstraint(Math.toRadians(45))
+                new AngularVelConstraint(Math.toRadians(40))
         ));
 
+        // Tọa độ bắt đầu
         Pose2d initialPose = new Pose2d(-48.5, -49, Math.toRadians(222));
         drive = new HardwareRobot.MecanumDrive(hardwareMap, initialPose);
 
-        // --- NHẬN DIỆN TRONG KHI CHỜ (INIT LOOP) ---
+        // --- BƯỚC 1: QUÉT TAG TRONG KHI CHỜ (INIT LOOP) ---
         while (!isStarted() && !isStopRequested()) {
             List<AprilTagDetection> detections = aprilTagProcessor.getDetections();
             for (AprilTagDetection d : detections) {
                 if (d.id >= 21 && d.id <= 23) detectedTagId = d.id;
             }
-            telemetry.addData("STATUS", "WAITING FOR START...");
-            telemetry.addData("TAG DETECTED", detectedTagId != -1 ? detectedTagId : "NONE (DEFAULT 21)");
+            telemetry.addData("STATUS", "READY - SCANNING TAG...");
+            telemetry.addData("DETECTED TAG", detectedTagId != -1 ? detectedTagId : "NONE (DEFAULT 21)");
             telemetry.update();
             sleep(20);
         }
@@ -67,11 +68,11 @@ public class auto2x extends LinearOpMode {
         waitForStart();
         if (isStopRequested()) return;
 
-        // --- XÂY DỰNG QUỸ ĐẠO TỔNG THỂ ---
+        // --- BƯỚC 2: XÂY DỰNG QUỸ ĐẠO TỔNG THỂ 12 QUẢ ---
         Action fullRoutine = drive.actionBuilder(initialPose)
-                // GIAI ĐOẠN 1: QUÉT TAG VÀ BẮN
+                // --- CHU KỲ 1: BẮN 3 QUẢ PRELOADS (DỰA TRÊN TAG) ---
                 .afterDisp(0, setShooter(Constants.NEAR_SHOOTER_SPEED))
-                .strafeToLinearHeading(new Vector2d(-22, -22), Math.toRadians(160))
+                .strafeToLinearHeading(new Vector2d(-22, -22), Math.toRadians(160)) // Quay mặt nhìn Tag lần cuối
                 .waitSeconds(0.8)
                 .stopAndAdd(packet -> {
                     List<AprilTagDetection> detections = aprilTagProcessor.getDetections();
@@ -80,8 +81,8 @@ public class auto2x extends LinearOpMode {
                     }
                     return false;
                 })
-                .strafeToLinearHeading(new Vector2d(-22, -22), Math.toRadians(222))
-                .waitSeconds(0.5)
+                .strafeToLinearHeading(new Vector2d(-22, -22), Math.toRadians(222)) // Quay lại hướng rổ
+                .waitSeconds(0.4)
                 .stopAndAdd(new Action() {
                     Action shootAction;
                     @Override
@@ -95,79 +96,64 @@ public class auto2x extends LinearOpMode {
                 })
                 .stopAndAdd(setShooter(0))
 
-                // GIAI ĐOẠN 2: THU HOẠCH 3 BÓNG (TIẾN - HÚT - LÙI)
-                // Bóng 1
+                // --- CHU KỲ 2: THU HOẠCH 3 BÓNG CẬN (Bóng 4, 5, 6) ---
+                // Thu hoạch bóng 1
                 .strafeToLinearHeading(new Vector2d(-11, -40), Math.toRadians(270))
-                .stopAndAdd(packet -> { servoSort.setPosition(Constants.SERVO2_POSITION1_INTAKE); return false; })
-                .waitSeconds(0.4)
-                .stopAndAdd(packet -> { intakeMotor.setPower(Constants.INTAKE_SPEED); return false; })
-                .strafeTo(new Vector2d(-11, -55), superSlowVel)
-                .waitSeconds(0.8)
-                .stopAndAdd(packet -> { intakeMotor.setPower(0); return false; })
-                .strafeTo(new Vector2d(-11, -45))
-
-                // Bóng 2
+                .stopAndAdd(safeCollectAction(-11, -55, 270, Constants.SERVO2_POSITION1_INTAKE, crawlVel))
+                // Thu hoạch bóng 2
                 .strafeToLinearHeading(new Vector2d(12, -40), Math.toRadians(268))
-                .stopAndAdd(packet -> { servoSort.setPosition(Constants.SERVO2_POSITION2_INTAKE); return false; })
-                .waitSeconds(0.4)
-                .stopAndAdd(packet -> { intakeMotor.setPower(Constants.INTAKE_SPEED); return false; })
-                .strafeTo(new Vector2d(12, -55), superSlowVel)
-                .waitSeconds(0.8)
-                .stopAndAdd(packet -> { intakeMotor.setPower(0); return false; })
-                .strafeTo(new Vector2d(12, -45))
-
-                // Bóng 3
+                .stopAndAdd(safeCollectAction(12, -55, 268, Constants.SERVO2_POSITION2_INTAKE, crawlVel))
+                // Thu hoạch bóng 3
                 .strafeToLinearHeading(new Vector2d(36, -40), Math.toRadians(-90))
-                .stopAndAdd(packet -> { servoSort.setPosition(Constants.SERVO2_POSITION3_INTAKE); return false; })
-                .waitSeconds(0.4)
-                .stopAndAdd(packet -> { intakeMotor.setPower(Constants.INTAKE_SPEED); return false; })
-                .strafeTo(new Vector2d(36, -55), superSlowVel)
-                .waitSeconds(0.8)
-                .stopAndAdd(packet -> { intakeMotor.setPower(0); return false; })
-                .strafeTo(new Vector2d(36, -45))
+                .stopAndAdd(safeCollectAction(36, -55, -90, Constants.SERVO2_POSITION3_INTAKE, crawlVel))
 
-                // GIAI ĐOẠN 3: QUAY LẠI BẮN NỐT
+                // Quay về bắn lượt 2 (Tổng 6 quả)
                 .strafeToLinearHeading(new Vector2d(-22, -22), Math.toRadians(222))
                 .afterDisp(0, setShooter(0.85))
                 .waitSeconds(1.0)
-                .stopAndAdd(new SequentialAction(
-                        safeSingleShot(Constants.SERVO2_POSITION1_SHOOTER),
-                        safeSingleShot(Constants.SERVO2_POSITION2_SHOOTER),
-                        safeSingleShot(Constants.SERVO2_POSITION3_SHOOTER),
-                        setShooter(0)
-                ))
+                .stopAndAdd(fireThreeBallsTumu())
+                .stopAndAdd(setShooter(0))
+
+                // --- CHU KỲ 3 & 4: CÓ THỂ ĐI HÚT TIẾP HOẶC LẶP LẠI ---
+                // (Để đạt 12 quả bạn cần đi hút thêm 2 lượt nữa hoặc tùy chỉnh tọa độ bãi bóng tiếp theo)
+                // Ở đây tôi viết mẫu quay lại hút bóng 1-2 lần nữa để đủ số lượng
+                .strafeToLinearHeading(new Vector2d(-11, -40), Math.toRadians(270))
+                .stopAndAdd(safeCollectAction(-11, -55, 270, Constants.SERVO2_POSITION1_INTAKE, crawlVel))
+                .strafeToLinearHeading(new Vector2d(-22, -22), Math.toRadians(222))
+                .afterDisp(0, setShooter(0.85))
+                .stopAndAdd(safeSingleShot(Constants.SERVO2_POSITION1_SHOOTER))
+                .stopAndAdd(setShooter(0))
+
                 .build();
 
         Actions.runBlocking(fullRoutine);
         visionPortal.close();
     }
 
-    private void initHardware() {
-        shooterMotor1 = hardwareMap.get(DcMotor.class, "shooter_motor_1");
-        shooterMotor2 = hardwareMap.get(DcMotor.class, "shooter_motor_2");
-        intakeMotor = hardwareMap.get(DcMotor.class, "intake_motor");
-        servoSort = hardwareMap.get(Servo.class, "servo_2");
-        servoPush = hardwareMap.get(Servo.class, "servo_1");
+    // --- HÀM HỖ TRỢ ACTION ---
 
-        shooterMotor1.setDirection(DcMotor.Direction.REVERSE);
-        shooterMotor2.setDirection(DcMotor.Direction.FORWARD);
-        servoPush.setPosition(Constants.SERVO1_CLOSE);
+    private Action safeCollectAction(double tx, double ty, double th, double sortPos, VelConstraint vel) {
+        return new SequentialAction(
+                packet -> { servoSort.setPosition(sortPos); return false; },
+                new SleepAction(0.4),
+                packet -> { intakeMotor.setPower(Constants.INTAKE_SPEED); return false; },
+                drive.actionBuilder(drive.localizer.getPose())
+                        .strafeToLinearHeading(new Vector2d(tx, ty), Math.toRadians(th), vel)
+                        .build(),
+                new SleepAction(0.7),
+                packet -> { intakeMotor.setPower(0); return false; },
+                drive.actionBuilder(new Pose2d(tx, ty, Math.toRadians(th)))
+                        .strafeTo(new Vector2d(tx, ty + 6)) // Lùi lại
+                        .build()
+        );
     }
 
-    private void initVision() {
-        aprilTagProcessor = new AprilTagProcessor.Builder().build();
-        visionPortal = new VisionPortal.Builder()
-                .setCamera(hardwareMap.get(WebcamName.class, "Webcam 1"))
-                .addProcessor(aprilTagProcessor)
-                .build();
-    }
-
-    private Action setShooter(double p) {
-        return packet -> {
-            shooterMotor1.setPower(p);
-            shooterMotor2.setPower(p);
-            return false;
-        };
+    private Action fireThreeBallsTumu() {
+        return new SequentialAction(
+                safeSingleShot(Constants.SERVO2_POSITION1_SHOOTER),
+                safeSingleShot(Constants.SERVO2_POSITION2_SHOOTER),
+                safeSingleShot(Constants.SERVO2_POSITION3_SHOOTER)
+        );
     }
 
     public Action safeSingleShot(double pos) {
@@ -186,11 +172,7 @@ public class auto2x extends LinearOpMode {
         for (String color : order) {
             final String c = color;
             shots.add(new SequentialAction(
-                    packet -> {
-                        double pos = getServoPosByColor(c);
-                        servoSort.setPosition(pos);
-                        return false;
-                    },
+                    packet -> { servoSort.setPosition(getServoPosByColor(c)); return false; },
                     new SleepAction(0.6),
                     packet -> { servoPush.setPosition(Constants.SERVO1_OPEN); return false; },
                     new SleepAction(0.4),
@@ -199,6 +181,32 @@ public class auto2x extends LinearOpMode {
             ));
         }
         return new SequentialAction(shots.toArray(new Action[0]));
+    }
+
+    private void initHardware() {
+        shooterMotor1 = hardwareMap.get(DcMotor.class, "shooter_motor_1");
+        shooterMotor2 = hardwareMap.get(DcMotor.class, "shooter_motor_2");
+        intakeMotor = hardwareMap.get(DcMotor.class, "intake_motor");
+        servoSort = hardwareMap.get(Servo.class, "servo_2");
+        servoPush = hardwareMap.get(Servo.class, "servo_1");
+        shooterMotor1.setDirection(DcMotor.Direction.REVERSE);
+        servoPush.setPosition(Constants.SERVO1_CLOSE);
+    }
+
+    private void initVision() {
+        aprilTagProcessor = new AprilTagProcessor.Builder().build();
+        visionPortal = new VisionPortal.Builder()
+                .setCamera(hardwareMap.get(WebcamName.class, "Webcam 1"))
+                .addProcessor(aprilTagProcessor)
+                .build();
+    }
+
+    private Action setShooter(double p) {
+        return packet -> {
+            shooterMotor1.setPower(p);
+            shooterMotor2.setPower(p);
+            return false;
+        };
     }
 
     private String[] getShootingOrder(int id) {
